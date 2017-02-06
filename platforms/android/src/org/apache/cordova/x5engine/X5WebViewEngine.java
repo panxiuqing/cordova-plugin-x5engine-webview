@@ -84,6 +84,17 @@ public class X5WebViewEngine implements CordovaWebViewEngine {
         this.webView = webView;
         cookieManager = new X5CookieManager(webView);
     }
+    
+    @Override
+    public void evaluateJavascript(String js, android.webkit.ValueCallback<String> callback) {
+        if (callback instanceof com.tencent.smtt.sdk.ValueCallback) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                webView.evaluateJavascript(js, (com.tencent.smtt.sdk.ValueCallback<String>) callback);
+            } else {
+                Log.d(TAG, "This webview is using the old bridge");
+            }
+        }
+    }
 
     @Override
     public void init(CordovaWebView parentWebView, CordovaInterface cordova, Client client,
@@ -116,6 +127,8 @@ public class X5WebViewEngine implements CordovaWebViewEngine {
                 X5WebViewEngine.this.cordova.getActivity().runOnUiThread(r);
             }
         }));
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2)
+            nativeToJsMessageQueue.addBridgeMode(new NativeToJsMessageQueue.EvalBridgeMode(this, cordova));
         bridge = new CordovaBridge(pluginManager, nativeToJsMessageQueue);
         exposeJsInterface(webView, bridge);
     }
